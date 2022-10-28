@@ -1,0 +1,22 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ip_address, campaign, content_type, created_at:date ,city, state, user_agent, referral, banner_size
+model Pixel {
+  id           String  @id @default(cuid())
+  ip_address   String
+  campaign     String?
+  content_type String?
+  city         String
+  state        String
+  user_agent   String
+}
