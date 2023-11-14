@@ -54,11 +54,11 @@ const Tracker = ({pixels}:any) => {
 
 export const getServerSideProps = async () => {
   // Get all foods in the "food" db
-  const pixelKeys = await redis.keys();
-  const pixels= pixels.map(async key => {
+  const pixelKeys = await redis.keys('people*');
+  const pixels= pixelKeys.map(async key => {
     return await redis.hgetall(key)
   })
-  const results = await Promise.all(pixels).then(values => values);
+  const results = await Promise.all(pixels)
   return {
     props: {
       pixels: results
