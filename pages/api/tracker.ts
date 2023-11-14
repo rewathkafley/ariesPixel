@@ -16,7 +16,7 @@ export default async function handler(
   res: NextApiResponse<any>
 ) {
   const forwarded = req.headers["x-forwarded-for"]
-  const ip = forwarded ? forwarded.split(/, /)[0] : req.connection.remoteAddress
+  const ip = forwarded ? (forwarded as string).split(/, /)[0] : req.socket.remoteAddress
   const user_agent = req.headers['user-agent']
 
   const {
