@@ -1,12 +1,15 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from 'next'
-import prisma from '../../lib/prisma';
 import fs from 'fs'
 import path from 'path'
+
+import { Redis } from "@upstash/redis";
 
 const filePath = path.resolve('.', 'tracker/tracker.gif')
 const imageBuffer = fs.readFileSync(filePath)
 
+
+const redis = Redis.fromEnv();
 
 export default async function handler(
   req: NextApiRequest,
@@ -26,7 +29,7 @@ export default async function handler(
     "User-Agent"   : "keycdn-tools:https://localhost"
   });
 
-  let locationData  = await fetch(`https://tools.keycdn.com/geo.json?host=69.118.172.165`, {
+  let locationData  = await fetch(`https://tools.keycdn.com/geo.json?host=${ip}`, {
     method  : 'GET', 
     headers : headers 
   })
@@ -39,17 +42,15 @@ export default async function handler(
 
 
   // Create new Pixel
-  await prisma.pixel.create({
-    data: {
-      ip_address: `${locationData.host}`,
-      campaign: `${req.query.campaign}`,
-      content_type: `${content_type}`,
-      city: `${locationData.city}`,
-      state: `${locationData.region_code}`,
-      user_agent: `${user_agent}`,
-    },
+  await redis.hset(`email-read-receipt:${locationData.host}`, {
+    ip_address: `${locationData.host}`,
+    campaign: `${req.query.campaign}`,
+    content_type: `${content_type}`,
+    city: `${locationData.city}`,
+    state: `${locationData.region_code}`,
+    user_agent: `${user_agent}`,
   });
-  
-  res.setHeader('Content-Type', 'image/jpg')
+
+  res.setHeader('Content-Type', 'image/gif')
   res.send(imageBuffer)
 }

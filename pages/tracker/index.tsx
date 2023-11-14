@@ -1,8 +1,9 @@
 import React from 'react'
-import { PrismaClient } from "@prisma/client";
 import { json } from 'stream/consumers';
+import { Redis } from "@upstash/redis";
 
-const prisma = new PrismaClient();
+const redis = Redis.fromEnv();
+
 
 
 const Tracker = ({pixels}:any) => {
@@ -53,10 +54,14 @@ const Tracker = ({pixels}:any) => {
 
 export const getServerSideProps = async () => {
   // Get all foods in the "food" db
-  const pixels = await prisma.pixel.findMany();
+  const pixelKeys = await redis.keys();
+  const pixels= pixels.map(async key => {
+    return await redis.hgetall(key)
+  })
+  const results = await Promise.all(pixels).then(values => values);
   return {
     props: {
-      pixels
+      pixels: results
     },
   };
 }
