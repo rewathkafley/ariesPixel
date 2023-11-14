@@ -16,17 +16,20 @@ export default async function handler(
   res: NextApiResponse<any>
 ) {
   const forwarded = req.headers["x-forwarded-for"]
+  console.log(req.headers);
+  console.log(req.socket.remoteAddress);
   const ip = forwarded ? (forwarded as string).split(/, /)[0] : req.socket.remoteAddress
   const user_agent = req.headers['user-agent']
+  console.log(req.query);
 
   const {
-    query: { campaign, content_type }
+    query: { campaign }
   } = req;
 
   let headers = new Headers({
     "Accept"       : "application/json",
     "Content-Type" : "application/json",
-    "User-Agent"   : "keycdn-tools:https://localhost"
+    "User-Agent"   : "keycdn-tools:https://example.com"
   });
 
   let locationData  = await fetch(`https://tools.keycdn.com/geo.json?host=${ip}`, {
@@ -44,13 +47,13 @@ export default async function handler(
   // Create new Pixel
   await redis.hset(`email-read-receipt:${locationData.host}`, {
     ip_address: `${locationData.host}`,
-    campaign: `${req.query.campaign}`,
-    content_type: `${content_type}`,
+    campaign: `${campaign}`,
     city: `${locationData.city}`,
+    country: `${locationData.country_name}`,
     state: `${locationData.region_code}`,
     user_agent: `${user_agent}`,
   });
 
   res.setHeader('Content-Type', 'image/gif')
-  res.send(imageBuffer)
+  res.send(imageBuffer)//
 }
